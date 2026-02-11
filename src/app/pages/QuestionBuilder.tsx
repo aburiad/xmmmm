@@ -400,7 +400,7 @@ export default function QuestionBuilder() {
                       </div>
 
                       {/* Marks and Optional */}
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label>নম্বর</Label>
                           <Input
@@ -414,6 +414,7 @@ export default function QuestionBuilder() {
                                 marks: parseInt(e.target.value) || 0,
                               })
                             }
+                            className="w-full"
                           />
                         </div>
 

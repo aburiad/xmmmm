@@ -83,9 +83,18 @@ function BlockRenderer({ block }: { block: Block }) {
         <div className="my-3">
           <img 
             src={block.content.url} 
-            alt="Question" 
-            className="max-w-md border border-slate-200 rounded"
+            alt={block.content.caption || 'Question'} 
+            className="border border-slate-200 rounded"
+            style={{
+              width: block.content.width ? `${block.content.width}px` : 'auto',
+              height: block.content.height ? `${block.content.height}px` : 'auto',
+              maxWidth: '100%',
+              objectFit: 'contain'
+            }}
           />
+          {block.content.caption && (
+            <p className="text-sm text-slate-500 mt-2 text-center">{block.content.caption}</p>
+          )}
         </div>
       );
 

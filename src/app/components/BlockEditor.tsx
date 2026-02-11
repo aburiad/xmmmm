@@ -168,9 +168,9 @@ function BlockRenderer({ block, onChange }: { block: Block; onChange: (content: 
           <Textarea
             value={block.content.text || ''}
             onChange={(e) => onChange({ text: e.target.value })}
-            placeholder="প্রশ্ন বা বিবরণ লিখুন..."
-            rows={3}
-            className="font-['Noto_Sans_Bengali']"
+            placeholder="প্রশ্নের অংশ লিখুন..."
+            rows={2}
+            className="resize-none"
           />
         </div>
       );
@@ -204,15 +204,119 @@ function BlockRenderer({ block, onChange }: { block: Block; onChange: (content: 
 
     case 'image':
       return (
-        <div className="space-y-2">
-          <Label className="text-xs text-slate-500">ছবি URL</Label>
-          <Input
-            value={block.content.url || ''}
-            onChange={(e) => onChange({ ...block.content, url: e.target.value })}
-            placeholder="ছবির লিংক দিন"
-          />
+        <div className="space-y-3">
+          {/* Image Upload Section */}
+          <div className="space-y-2">
+            <Label className="text-xs text-slate-500 font-semibold">ছবি আপলোড করুন</Label>
+            <div className="flex flex-col gap-2">
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    // Check file size (max 2MB)
+                    if (file.size > 2 * 1024 * 1024) {
+                      alert('ছবির সাইজ ২MB এর বেশি হতে পারবে না');
+                      return;
+                    }
+                    
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                      const base64 = event.target?.result;
+                      onChange({ ...block.content, url: base64 });
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                }}
+                className="w-full cursor-pointer"
+              />
+              <p className="text-xs text-slate-400">
+                সর্বোচ্চ সাইজ: 2MB | ফরম্যাট: JPG, PNG, GIF
+              </p>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-slate-200"></div>
+            </div>
+            <div className="relative flex justify-center text-xs">
+              <span className="bg-white px-2 text-slate-400">অথবা</span>
+            </div>
+          </div>
+
+          {/* URL Input Section */}
+          <div className="space-y-2">
+            <Label className="text-xs text-slate-500 font-semibold">ছবির URL দিন</Label>
+            <Input
+              value={block.content.url || ''}
+              onChange={(e) => onChange({ ...block.content, url: e.target.value })}
+              placeholder="https://example.com/image.png"
+              className="w-full"
+            />
+            <p className="text-xs text-slate-400">
+              টিপস: Unsplash, Imgur বা অন্য image hosting সাইট থেকে ছবির লিংক ব্যবহার করুন
+            </p>
+          </div>
+          
+          {/* Width and Height Settings */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label className="text-xs text-slate-500">প্রস্থ (px)</Label>
+              <Input
+                type="number"
+                min="50"
+                max="800"
+                value={block.content.width || ''}
+                onChange={(e) => onChange({ ...block.content, width: e.target.value })}
+                placeholder="যেমন: 300"
+                className="w-full"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs text-slate-500">উচ্চতা (px)</Label>
+              <Input
+                type="number"
+                min="50"
+                max="800"
+                value={block.content.height || ''}
+                onChange={(e) => onChange({ ...block.content, height: e.target.value })}
+                placeholder="যেমন: 200"
+                className="w-full"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs text-slate-500">ক্যাপশন (ঐচ্ছিক)</Label>
+            <Input
+              value={block.content.caption || ''}
+              onChange={(e) => onChange({ ...block.content, caption: e.target.value })}
+              placeholder="ছবির বর্ণনা..."
+              className="w-full"
+            />
+          </div>
+
+          {/* Image Preview */}
           {block.content.url && (
-            <img src={block.content.url} alt="Preview" className="max-w-xs rounded border" />
+            <div className="p-3 bg-slate-50 rounded border border-slate-200">
+              <img 
+                src={block.content.url} 
+                alt={block.content.caption || 'Preview'} 
+                style={{
+                  width: block.content.width ? `${block.content.width}px` : 'auto',
+                  height: block.content.height ? `${block.content.height}px` : 'auto',
+                  maxWidth: '100%',
+                  objectFit: 'contain'
+                }}
+                className="rounded"
+              />
+              {block.content.caption && (
+                <p className="text-xs text-slate-500 mt-2 text-center">{block.content.caption}</p>
+              )}
+            </div>
           )}
         </div>
       );

@@ -197,6 +197,13 @@ export function BoardStyleLayout({ paper, baseFontSize = 13 }: BoardStyleLayoutP
           background-color: #fafafa;
         }
 
+        .board-caption {
+          font-size: 11px;
+          color: #666;
+          text-align: center;
+          margin-top: 4px;
+        }
+
         @media print {
           .board-exam-paper {
             font-size: 12px;
@@ -287,9 +294,18 @@ function BoardBlock({ block }: { block: Block }) {
         <div className="board-block">
           <img 
             src={block.content.url} 
-            alt="Question" 
+            alt={block.content.caption || 'Question'} 
             className="board-image"
+            style={{
+              width: block.content.width ? `${block.content.width}px` : 'auto',
+              height: block.content.height ? `${block.content.height}px` : 'auto',
+              maxWidth: '100%',
+              objectFit: 'contain'
+            }}
           />
+          {block.content.caption && (
+            <p className="board-caption">{block.content.caption}</p>
+          )}
         </div>
       );
 
@@ -303,6 +319,9 @@ function BoardBlock({ block }: { block: Block }) {
     case 'table':
       const rows = block.content.rows || 2;
       const cols = block.content.cols || 2;
+      const headers = block.content.headers || [];
+      const data = block.content.data || [];
+      
       return (
         <div className="board-block">
           <table style={{ 
@@ -311,19 +330,42 @@ function BoardBlock({ block }: { block: Block }) {
             fontSize: '11px',
             width: '100%'
           }}>
+            {/* Table Header */}
+            {headers.length > 0 && headers.some((h: string) => h && h.trim() !== '') && (
+              <thead>
+                <tr>
+                  {headers.map((header: string, idx: number) => (
+                    <th
+                      key={idx}
+                      style={{
+                        border: '1px solid #000',
+                        padding: '4px 6px',
+                        textAlign: 'left',
+                        backgroundColor: '#f1f5f9',
+                        fontWeight: 'bold'
+                      }}
+                    >
+                      {header}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+            )}
+            
+            {/* Table Body */}
             <tbody>
-              {Array.from({ length: rows }).map((_, rowIdx) => (
+              {data.map((rowData: string[], rowIdx: number) => (
                 <tr key={rowIdx}>
-                  {Array.from({ length: cols }).map((_, colIdx) => (
+                  {rowData.map((cellData: string, colIdx: number) => (
                     <td
                       key={colIdx}
                       style={{
                         border: '1px solid #000',
                         padding: '4px 6px',
-                        textAlign: 'center'
+                        textAlign: 'left'
                       }}
                     >
-                      {/* Empty cell for student answers */}
+                      {cellData}
                     </td>
                   ))}
                 </tr>
