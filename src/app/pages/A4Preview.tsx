@@ -112,8 +112,12 @@ export default function A4Preview() {
       
       if (result.success && result.pdfUrl) {
         toast.success('PDF সফলভাবে তৈরি হয়েছে!', { id: loadingToast });
-        // Open PDF in new tab
-        downloadPDF(result.pdfUrl);
+        
+        // Generate filename
+        const filename = `${paper.setup.subject || 'question-paper'}_${paper.setup.class || ''}_${Date.now()}.pdf`;
+        
+        // Download PDF
+        downloadPDF(result.pdfUrl, filename);
       } else {
         toast.error(result.error || 'PDF তৈরিতে ব্যর্থ', { id: loadingToast });
       }

@@ -99,16 +99,14 @@ export async function generatePDFFromWordPress(paper, pageSettings) {
  * Download PDF file
  */
 export function downloadPDF(pdfUrl, filename) {
-  // Open PDF in new tab
-  window.open(pdfUrl, '_blank');
-  
-  // Alternative: Trigger download
-  // const link = document.createElement('a');
-  // link.href = pdfUrl;
-  // link.download = filename || 'question-paper.pdf';
-  // document.body.appendChild(link);
-  // link.click();
-  // document.body.removeChild(link);
+  // Trigger automatic download
+  const link = document.createElement('a');
+  link.href = pdfUrl;
+  link.download = filename || 'question-paper.pdf';
+  link.target = '_blank'; // Fallback: open in new tab if download fails
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
 
 /**

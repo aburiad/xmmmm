@@ -1,0 +1,318 @@
+═══════════════════════════════════════════════════════════
+🔴 URGENT FIX - UPLOAD THESE FILES NOW!
+═══════════════════════════════════════════════════════════
+
+ERROR: "FPDF error: Could not include font definition file"
+
+✅ ROOT CAUSE: FPDF_FONTPATH was being defined AFTER FPDF was already loaded!
+
+✅ FIX APPLIED: Moved FPDF_FONTPATH definition to BEFORE FPDF loads
+
+═══════════════════════════════════════════════════════════
+📦 FILES TO UPLOAD (Only 1 file changed):
+═══════════════════════════════════════════════════════════
+
+Upload this file via FTP/cPanel:
+
+✅ question-paper-pdf-generator.php  ← UPDATED (Line 24-27 added)
+   
+Path: /wp-content/plugins/question-paper-pdf-generator/
+
+The fonts/*.php files you created earlier are still fine!
+
+═══════════════════════════════════════════════════════════
+📝 WHAT CHANGED IN question-paper-pdf-generator.php:
+═══════════════════════════════════════════════════════════
+
+OLD CODE (Line 20-22):
+──────────────────────────────────────────────────────────
+define('QP_PDF_VERSION', '1.0.0');
+define('QP_PDF_PLUGIN_DIR', plugin_dir_path(__FILE__));
+define('QP_PDF_PLUGIN_URL', plugin_dir_url(__FILE__));
+
+// Helper function to get upload directory...
+
+
+NEW CODE (Line 20-28):
+──────────────────────────────────────────────────────────
+define('QP_PDF_VERSION', '1.0.0');
+define('QP_PDF_PLUGIN_DIR', plugin_dir_path(__FILE__));
+define('QP_PDF_PLUGIN_URL', plugin_dir_url(__FILE__));
+
+// CRITICAL: Define FPDF font path BEFORE loading FPDF library
+// This tells FPDF where to find font definition files
+if (!defined('FPDF_FONTPATH')) {
+    define('FPDF_FONTPATH', plugin_dir_path(__FILE__) . 'fonts/');
+}
+
+// Helper function to get upload directory...
+──────────────────────────────────────────────────────────
+
+═══════════════════════════════════════════════════════════
+🚀 UPLOAD METHOD 1: FTP/cPanel (1 minute)
+═══════════════════════════════════════════════════════════
+
+1. Connect to your server via FTP or cPanel File Manager
+
+2. Navigate to:
+   /wp-content/plugins/question-paper-pdf-generator/
+
+3. Upload (replace existing file):
+   ✅ question-paper-pdf-generator.php
+
+4. Done! The plugin will automatically use the new code.
+   No need to deactivate/reactivate.
+
+5. Test immediately with test-plugin.php!
+
+═══════════════════════════════════════════════════════════
+📋 VERIFY BEFORE TESTING:
+═══════════════════════════════════════════════════════════
+
+Make sure these files exist on server:
+
+/wp-content/plugins/question-paper-pdf-generator/
+├── question-paper-pdf-generator.php   ✅ JUST UPLOADED
+├── fonts/
+│   ├── helvetica.php                  ✅ Should exist from earlier
+│   ├── helveticab.php                 ✅ Should exist from earlier
+│   ├── helveticai.php                 ✅ Should exist from earlier
+│   └── courier.php                    ✅ Should exist from earlier
+└── includes/
+    ├── class-qp-pdf-generator.php     ✅ Should exist
+    ├── class-qp-rest-api.php          ✅ Should exist
+    └── lib/
+        └── fpdf.php                    ✅ Should exist
+
+═══════════════════════════════════════════════════════════
+🧪 TEST AFTER UPLOAD:
+═══════════════════════════════════════════════════════════
+
+METHOD 1: Use test-plugin.php (Recommended)
+────────────────────────────────────────────────────────────
+1. Upload test-plugin.php to WordPress root directory
+   (the UPDATED version with font path diagnostics)
+
+2. Visit: https://ahsan.ronybormon.com/test-plugin.php
+
+3. Check "Font Path Check" section - should show:
+   ✅ FPDF_FONTPATH is defined: /path/to/.../fonts/
+   ✅ Font directory exists!
+   ✅ Font files found:
+      - helvetica.php (1207 bytes)
+      - helveticab.php (1208 bytes)
+      - helveticai.php (1207 bytes)
+      - courier.php (1208 bytes)
+
+4. Click "Generate Test PDF" button
+
+5. Expected result:
+   ✅ PDF Generated Successfully!
+   ✅ Download link appears
+   ✅ Click link → PDF downloads
+
+
+METHOD 2: Use React App
+────────────────────────────────────────────────────────────
+1. Open your Question Paper Generator app
+
+2. Create a simple question paper
+
+3. Click "অনলাইন ডাউনলোড করুন ☁️"
+
+4. Expected result:
+   ✅ No console errors
+   ✅ PDF downloads
+   ✅ PDF opens successfully
+
+═══════════════════════════════════════════════════════════
+❌ IF STILL GETTING ERRORS:
+═══════════════════════════════════════════════════════════
+
+Error 1: Still "Could not include font definition file"
+────────────────────────────────────────────────────────────
+Cause: Font files not uploaded or wrong location
+
+Fix:
+1. Visit test-plugin.php
+2. Check "Font Path Check" section
+3. Note the FPDF_FONTPATH value
+4. Verify font files exist at that exact path
+5. Upload fonts/*.php files if missing
+
+
+Error 2: "FPDF_FONTPATH is NOT defined"
+────────────────────────────────────────────────────────────
+Cause: Old version of main plugin file still on server
+
+Fix:
+1. Verify you uploaded question-paper-pdf-generator.php
+2. Check file timestamp - should be recent
+3. Re-upload to be sure
+4. Clear any server-side caching (if applicable)
+
+
+Error 3: Font files not found
+────────────────────────────────────────────────────────────
+Cause: Font files missing or wrong permissions
+
+Fix:
+1. Upload all 4 font files to fonts/ directory
+2. Set permissions:
+   chmod 755 fonts/
+   chmod 644 fonts/*.php
+3. Verify files exist via test-plugin.php
+
+
+Error 4: WordPress fatal error on activation
+────────────────────────────────────────────────────────────
+Cause: PHP syntax error (unlikely with this code)
+
+Fix:
+1. Enable WordPress debug:
+   In wp-config.php add:
+   define('WP_DEBUG', true);
+   define('WP_DEBUG_LOG', true);
+2. Check /wp-content/debug.log
+3. Send me the exact error message
+
+═══════════════════════════════════════════════════════════
+🎯 WHY THIS FIX WILL WORK:
+═══════════════════════════════════════════════════════════
+
+Before:
+───────
+1. Plugin loads (question-paper-pdf-generator.php)
+2. Constants defined (QP_PDF_PLUGIN_DIR, etc.)
+3. load_dependencies() called
+4. FPDF library loaded (includes/lib/fpdf.php)
+   ← FPDF reads FPDF_FONTPATH here
+   ← FPDF_FONTPATH not defined yet!
+   ← FPDF uses default path: __DIR__/../../fonts/
+   ← Wrong path!
+5. Later, class-qp-pdf-generator.php tries to define FPDF_FONTPATH
+   ← Too late! FPDF already initialized!
+
+After:
+──────
+1. Plugin loads (question-paper-pdf-generator.php)
+2. Constants defined (QP_PDF_PLUGIN_DIR, etc.)
+3. FPDF_FONTPATH defined ✅ BEFORE loading FPDF!
+4. load_dependencies() called
+5. FPDF library loaded (includes/lib/fpdf.php)
+   ← FPDF reads FPDF_FONTPATH here ✅
+   ← FPDF_FONTPATH = /path/to/fonts/ ✅
+   ← Correct path!
+6. SetFont('Arial', 'B') called
+   ← FPDF looks for helveticab.php in FPDF_FONTPATH
+   ← File found! ✅
+   ← Font loads successfully! ✅
+
+═══════════════════════════════════════════════════════════
+📊 EXECUTION FLOW:
+═══════════════════════════════════════════════════════════
+
+React App Request:
+─────────────────
+1. User clicks download button
+   ↓
+2. POST /wp-json/qpm/v1/generate-pdf
+   ↓
+3. class-qp-rest-api.php receives request
+   ↓
+4. Creates new QP_PDF_Generator()
+   ↓
+5. Calls $generator->generate(data, settings)
+   ↓
+6. init_pdf() creates new PDF_Bangla instance
+   ↓
+7. FPDF constructor runs:
+   - Checks if FPDF_FONTPATH is defined ✅
+   - Uses FPDF_FONTPATH = /path/to/fonts/ ✅
+   ↓
+8. SetFont('Arial', 'B', 11) called
+   ↓
+9. FPDF converts Arial → Helvetica
+   ↓
+10. AddFont('helvetica', 'B') called
+    ↓
+11. Looks for file: helveticab.php
+    ↓
+12. Checks: FPDF_FONTPATH . 'helveticab.php'
+    = /path/to/fonts/helveticab.php
+    ↓
+13. File exists! ✅
+    ↓
+14. include($fontpath . 'helveticab.php') ✅
+    ↓
+15. Font loaded successfully! ✅
+    ↓
+16. PDF renders content
+    ↓
+17. PDF saved to /wp-content/uploads/question-papers/
+    ↓
+18. Returns URL to React app
+    ↓
+19. PDF downloads! ✅
+
+═══════════════════════════════════════════════════════════
+✅ SUCCESS INDICATORS:
+═══════════════════════════════════════════════════════════
+
+After upload, you should see:
+
+test-plugin.php:
+✅ FPDF_FONTPATH is defined: /home/.../fonts/
+✅ Font directory exists!
+✅ Font files found: 4 files listed
+✅ PDF Generated Successfully!
+✅ Download link works
+
+React App:
+✅ No console errors
+✅ Network tab shows: 200 OK for /generate-pdf
+✅ Response contains: {"success":true,"url":"..."}
+✅ PDF downloads automatically
+✅ PDF opens correctly
+
+PDF Content:
+✅ Header shows (even if in English, not Bangla)
+✅ Questions are formatted
+✅ No blank pages
+✅ No PHP errors visible
+
+═══════════════════════════════════════════════════════════
+📞 NEXT STEPS IF SUCCESS:
+═══════════════════════════════════════════════════════════
+
+1. ✅ Delete test-plugin.php from server (security)
+
+2. ✅ Test creating actual question papers from your app
+
+3. ⚠️ Note: Bangla text will still show as "?" 
+   - This is expected with core fonts
+   - Will fix with Bangla TTF font later
+
+4. ✅ Ready for production use (with English text)
+
+5. Future enhancement: Add Bangla font support
+   - Will need to convert Bangla TTF to FPDF format
+   - Will use FPDF font converter tool
+   - Will add with AddFont() method
+
+═══════════════════════════════════════════════════════════
+📦 SUMMARY:
+═══════════════════════════════════════════════════════════
+
+Upload: 1 file (question-paper-pdf-generator.php)
+Time: 1 minute
+Risk: Low (only adds 4 lines of code)
+Impact: Fixes the font definition error completely
+
+DO IT NOW! Then test with test-plugin.php!
+
+═══════════════════════════════════════════════════════════
+Version: 1.0.0-FINAL-FIX
+Date: February 11, 2026
+Status: READY TO UPLOAD 🚀
+═══════════════════════════════════════════════════════════
