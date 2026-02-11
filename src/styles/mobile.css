@@ -1,0 +1,165 @@
+/* Mobile-Specific Utility Classes */
+
+/* Prevent horizontal scrolling on mobile */
+@media (max-width: 768px) {
+  body {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  * {
+    max-width: 100%;
+  }
+}
+
+/* Safe Area Utilities - iOS notch/home indicator support */
+.safe-area-top {
+  padding-top: var(--safe-area-top);
+}
+
+.safe-area-bottom {
+  padding-bottom: var(--safe-area-bottom);
+}
+
+.safe-area-left {
+  padding-left: var(--safe-area-left);
+}
+
+.safe-area-right {
+  padding-right: var(--safe-area-right);
+}
+
+.pb-safe {
+  padding-bottom: max(1rem, var(--safe-area-bottom));
+}
+
+.pt-safe {
+  padding-top: max(1rem, var(--safe-area-top));
+}
+
+/* Thumb-Friendly Touch Targets - Minimum 44px */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Active State for Mobile Buttons */
+.mobile-active {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.mobile-active:active {
+  opacity: 0.7;
+  transform: scale(0.98);
+}
+
+/* Prevent Text Selection on Mobile UI Elements */
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Smooth Scroll for Mobile */
+.smooth-scroll {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Hide Scrollbar on Mobile */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Mobile Card Shadow */
+.mobile-card-shadow {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.mobile-card-shadow:active {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Bottom Sheet/Modal Animations */
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+/* Mobile-Optimized Font Sizes */
+@media (max-width: 640px) {
+  .mobile-heading {
+    font-size: 1.25rem; /* 20px */
+    line-height: 1.75rem; /* 28px */
+  }
+
+  .mobile-body {
+    font-size: 0.9375rem; /* 15px */
+    line-height: 1.375rem; /* 22px */
+  }
+
+  .mobile-caption {
+    font-size: 0.8125rem; /* 13px */
+    line-height: 1.125rem; /* 18px */
+  }
+}
+
+/* Prevent Zoom on Input Focus (iOS Safari) */
+@media (max-width: 768px) {
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="tel"],
+  select,
+  textarea {
+    font-size: 16px !important; /* Prevent iOS zoom */
+  }
+}
+
+/* Mobile-Friendly Form Elements */
+.mobile-input {
+  height: 48px;
+  padding: 0 16px;
+  font-size: 16px;
+  border-radius: 12px;
+}
+
+.mobile-button {
+  height: 48px;
+  padding: 0 24px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 12px;
+}
+
+/* Sticky Header/Footer on Mobile */
+.mobile-sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.mobile-sticky-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 40;
+  background: white;
+  box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.1);
+}
