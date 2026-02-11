@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { useReactToPrint } from 'react-to-print';
 import { Button } from '../components/ui/button';
-import { ArrowLeft, BookOpen, Settings, Download } from 'lucide-react';
+import { ArrowLeft, BookOpen, Settings, Download, Cloud } from 'lucide-react';
 import { QuestionPaper } from '../types';
 import { loadPapers } from '../utils/storage';
 import { QuestionRenderer } from '../components/QuestionRenderer';
@@ -20,6 +20,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '../components/ui/sheet';
+import { generatePDFFromWordPress, downloadPDF } from '../utils/pdfGenerator';
 
 export default function A4Preview() {
   const { paperId } = useParams();
@@ -89,6 +90,37 @@ export default function A4Preview() {
       'model-test': 'মডেল টেস্ট',
     };
     return map[type] || type;
+  };
+
+  // WordPress PDF Download Handler
+  const handleWordPressPDF = async () => {
+    if (!paper) return;
+    
+    // Show loading toast
+    const loadingToast = toast.loading('PDF তৈরি হচ্ছে WordPress থেকে...');
+    
+    try {
+      // Prepare page settings
+      const pageSettings = {
+        columns: 1,
+        columnGap: 20,
+        pageMargin: pageMargin
+      };
+      
+      // Generate PDF from WordPress
+      const result = await generatePDFFromWordPress(paper, pageSettings);
+      
+      if (result.success && result.pdfUrl) {
+        toast.success('PDF সফলভাবে তৈরি হয়েছে!', { id: loadingToast });
+        // Open PDF in new tab
+        downloadPDF(result.pdfUrl);
+      } else {
+        toast.error(result.error || 'PDF তৈরিতে ব্যর্থ', { id: loadingToast });
+      }
+    } catch (error) {
+      console.error('WordPress PDF Error:', error);
+      toast.error('PDF তৈরিতে সমস্যা হয়েছে', { id: loadingToast });
+    }
   };
 
   // PDF Download using Browser's native print-to-PDF functionality
@@ -344,6 +376,14 @@ export default function A4Preview() {
               >
                 <Download className="w-4 h-4 mr-2" />
                 ডাউনলোড করুন
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleWordPressPDF}
+              >
+                <Cloud className="w-4 h-4 mr-2" />
+                অনলাইন ডাউনলোড করুন
               </Button>
             </div>
           </div>
