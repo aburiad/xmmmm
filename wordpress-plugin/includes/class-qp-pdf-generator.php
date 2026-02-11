@@ -57,28 +57,45 @@ class QP_PDF_Generator {
      */
     public function generate($question_paper, $page_settings, $filename = 'question-paper') {
         try {
+            error_log('QPM Debug: Starting PDF generation...');
+            error_log('QPM Debug: Filename: ' . $filename);
+            error_log('QPM Debug: Question paper data: ' . print_r($question_paper, true));
+            
             // Initialize PDF
             $this->init_pdf($page_settings);
+            error_log('QPM Debug: PDF initialized');
             
             // Add page
             $this->pdf->AddPage();
+            error_log('QPM Debug: Page added');
+            
+            // Add some test content to ensure PDF is not empty
+            $this->pdf->SetFont('Arial', 'B', 16);
+            $this->pdf->Cell(0, 10, 'Question Paper', 0, 1, 'C');
+            error_log('QPM Debug: Test content added');
             
             // Render header
             if (!empty($question_paper['header'])) {
                 $this->render_header($question_paper['header']);
+                error_log('QPM Debug: Header rendered');
             }
             
             // Render questions
             if (!empty($question_paper['questions'])) {
                 $this->render_questions($question_paper['questions']);
+                error_log('QPM Debug: Questions rendered, count: ' . count($question_paper['questions']));
+            } else {
+                error_log('QPM Debug: No questions to render!');
             }
             
             // Save PDF file
             $result = $this->save_pdf($filename);
+            error_log('QPM Debug: PDF saved successfully');
             
             return $result;
             
         } catch (Exception $e) {
+            error_log('QPM Debug: Exception caught: ' . $e->getMessage());
             return new WP_Error(
                 'pdf_generation_error',
                 'PDF generation failed: ' . $e->getMessage(),
@@ -118,49 +135,54 @@ class QP_PDF_Generator {
      * Render header section
      */
     private function render_header($header) {
-        // Board logo (if exists and is accessible)
-        if (!empty($header['logo']) && file_exists($header['logo'])) {
-            $this->pdf->Image($header['logo'], null, null, 15);
-            $this->pdf->Ln(2);
-        }
+        // Title with guaranteed content
+        $this->pdf->SetFont('Arial', 'B', 16);
+        $this->pdf->Cell(0, 10, 'QUESTION PAPER', 0, 1, 'C');
+        $this->pdf->Ln(3);
         
         // Board name
         if (!empty($header['boardName'])) {
             $this->pdf->SetFont('Arial', 'B', 13);
-            $this->pdf->Cell(0, 6, $this->convert_bangla($header['boardName']), 0, 1, 'C');
+            $this->pdf->Cell(0, 8, $header['boardName'], 0, 1, 'C');
         }
         
         // Exam title
         if (!empty($header['examTitle'])) {
             $this->pdf->SetFont('Arial', 'B', 12);
-            $this->pdf->Cell(0, 6, $this->convert_bangla($header['examTitle']), 0, 1, 'C');
+            $this->pdf->Cell(0, 7, $header['examTitle'], 0, 1, 'C');
         }
         
         // Class and Subject
-        $this->pdf->SetFont('Arial', '', 10);
+        $this->pdf->SetFont('Arial', '', 11);
         if (!empty($header['class'])) {
-            $this->pdf->Cell(0, 5, $this->convert_bangla('শ্রেণি: ' . $header['class']), 0, 1, 'C');
+            $this->pdf->Cell(0, 6, 'Class: ' . $header['class'], 0, 1, 'C');
         }
         
         if (!empty($header['subject'])) {
-            $this->pdf->Cell(0, 5, $this->convert_bangla('বিষয়: ' . $header['subject']), 0, 1, 'C');
+            $this->pdf->Cell(0, 6, 'Subject: ' . $header['subject'], 0, 1, 'C');
         }
         
         // Marks and Time
-        $this->pdf->Ln(2);
+        $this->pdf->Ln(3);
         $this->pdf->Cell(0, 0, '', 'T'); // Top border line
-        $this->pdf->Ln(1);
+        $this->pdf->Ln(2);
         
+        $this->pdf->SetFont('Arial', '', 10);
         $marks_time = '';
         if (!empty($header['totalMarks'])) {
-            $marks_time .= $this->convert_bangla('পূর্ণমান: ' . $header['totalMarks']);
+            $marks_time .= 'Total Marks: ' . $header['totalMarks'];
         }
         if (!empty($header['duration'])) {
-            if ($marks_time) $marks_time .= '                '; // Spacing
-            $marks_time .= $this->convert_bangla('সময়: ' . $header['duration']);
+            if ($marks_time) $marks_time .= '        '; // Spacing
+            $marks_time .= 'Time: ' . $header['duration'];
         }
         
-        $this->pdf->Cell(0, 6, $marks_time, 0, 1, 'C');
+        if ($marks_time) {
+            $this->pdf->Cell(0, 6, $marks_time, 0, 1, 'C');
+        }
+        
+        $this->pdf->Ln(2);
+        $this->pdf->Cell(0, 0, '', 'T'); // Bottom border line
         $this->pdf->Ln(5);
     }
     
@@ -182,13 +204,16 @@ class QP_PDF_Generator {
     private function render_question($question) {
         // Question number and marks
         $this->pdf->SetFont('Arial', 'B', 11);
-        $question_header = $this->convert_bangla($question['number']) . '. ';
+        
+        // Simple ASCII question header (avoid Bangla rendering issues)
+        $question_header = 'Q' . $question['number'] . '. ';
         
         if (!empty($question['marks'])) {
-            $question_header .= ' [' . $this->convert_bangla($question['marks'] . ' নম্বর') . ']';
+            $question_header .= '[' . $question['marks'] . ' marks]';
         }
         
-        $this->pdf->Cell(0, 6, $question_header, 0, 1);
+        $this->pdf->Cell(0, 7, $question_header, 0, 1);
+        $this->pdf->Ln(2);
         
         // Question blocks
         if (!empty($question['blocks'])) {
@@ -196,13 +221,16 @@ class QP_PDF_Generator {
             $this->render_blocks($question['blocks']);
         }
         
-        // Sub-questions (ক, খ, গ, ঘ)
+        // Sub-questions (a, b, c, d)
         if (!empty($question['subQuestions'])) {
             $this->pdf->Ln(2);
             foreach ($question['subQuestions'] as $sub) {
                 $this->pdf->SetX($this->pdf->GetX() + 10); // Indent
                 $this->pdf->SetFont('Arial', 'B', 10);
-                $this->pdf->Cell(10, 5, $this->convert_bangla($sub['label']), 0, 0);
+                
+                // Convert Bangla labels (ক, খ, গ) to English (a, b, c)
+                $label = $this->convert_bangla_label($sub['label']);
+                $this->pdf->Cell(10, 6, $label . ')', 0, 0);
                 
                 $this->pdf->SetFont('Arial', '', 10);
                 if (!empty($sub['blocks'])) {
@@ -212,8 +240,9 @@ class QP_PDF_Generator {
                 }
                 
                 if (!empty($sub['marks'])) {
-                    $this->pdf->Cell(0, 5, '[' . $this->convert_bangla($sub['marks']) . ']', 0, 1, 'R');
+                    $this->pdf->Cell(0, 5, '[' . $sub['marks'] . ' marks]', 0, 1, 'R');
                 }
+                $this->pdf->Ln(1);
             }
         }
     }
@@ -398,10 +427,30 @@ class QP_PDF_Generator {
     }
     
     /**
+     * Convert Bangla labels to English
+     */
+    private function convert_bangla_label($label) {
+        // Bangla to English mapping for sub-question labels
+        $bangla_to_english = array(
+            'ক' => 'a',
+            'খ' => 'b',
+            'গ' => 'c',
+            'ঘ' => 'd'
+        );
+        
+        // Replace Bangla with English
+        $label = str_replace(array_keys($bangla_to_english), array_values($bangla_to_english), $label);
+        
+        return $label;
+    }
+    
+    /**
      * Save PDF file
      */
     private function save_pdf($filename) {
-        // Sanitize filename
+        // Remove Bangla characters and sanitize filename
+        // Convert to ASCII-safe filename
+        $filename = $this->sanitize_bangla_filename($filename);
         $filename = sanitize_file_name($filename);
         $filename = $filename . '-' . time() . '.pdf';
         
@@ -409,20 +458,96 @@ class QP_PDF_Generator {
         $upload_dir = qp_pdf_get_upload_dir();
         $upload_url = qp_pdf_get_upload_url();
         
-        // Ensure upload directory exists
+        // Ensure upload directory exists with proper permissions
         if (!file_exists($upload_dir)) {
-            wp_mkdir_p($upload_dir);
+            if (!wp_mkdir_p($upload_dir)) {
+                error_log('QPM Error: Failed to create directory: ' . $upload_dir);
+                throw new Exception('Failed to create upload directory');
+            }
+            // Set proper permissions
+            @chmod($upload_dir, 0755);
+        }
+        
+        // Verify directory is writable
+        if (!is_writable($upload_dir)) {
+            error_log('QPM Error: Directory not writable: ' . $upload_dir);
+            throw new Exception('Upload directory is not writable');
         }
         
         $file_path = $upload_dir . $filename;
         
-        // Save PDF
-        $this->pdf->Output('F', $file_path);
+        // Save PDF with error handling
+        try {
+            $this->pdf->Output('F', $file_path);
+            
+            // Verify file was created
+            if (!file_exists($file_path)) {
+                error_log('QPM Error: PDF file not created: ' . $file_path);
+                throw new Exception('PDF file was not created');
+            }
+            
+            // Check file size
+            $file_size = filesize($file_path);
+            error_log('QPM Debug: PDF file size: ' . $file_size . ' bytes');
+            
+            if ($file_size < 100) {
+                error_log('QPM Error: PDF file too small (possibly empty): ' . $file_size . ' bytes');
+                throw new Exception('PDF file is empty or corrupted');
+            }
+            
+            // Set proper file permissions
+            @chmod($file_path, 0644);
+            
+            error_log('QPM Success: PDF created at: ' . $file_path . ' (' . $file_size . ' bytes)');
+            
+        } catch (Exception $e) {
+            error_log('QPM Error during PDF Output: ' . $e->getMessage());
+            throw new Exception('Failed to save PDF: ' . $e->getMessage());
+        }
         
         return array(
             'path' => $file_path,
             'url'  => $upload_url . $filename,
             'filename' => $filename
         );
+    }
+    
+    /**
+     * Sanitize Bangla filename - Transliterate to English
+     */
+    private function sanitize_bangla_filename($filename) {
+        // Bangla to English mapping
+        $bangla_to_english = array(
+            'গণিত' => 'gonit',
+            'বাংলা' => 'bangla',
+            'ইংরেজি' => 'english',
+            'বিজ্ঞান' => 'biggan',
+            'সমাজ' => 'somaj',
+            'ইতিহাস' => 'itihas',
+            'ভূগোল' => 'bhugol',
+            'পদার্থবিজ্ঞান' => 'physics',
+            'রসায়ন' => 'chemistry',
+            'জীববিজ্ঞান' => 'biology',
+            'ধর্ম' => 'religion',
+            'কৃষি' => 'agriculture',
+            'গার্হস্থ্য' => 'home-science',
+            'চারু' => 'fine-arts',
+            'সংগীত' => 'music',
+            '০' => '0', '১' => '1', '২' => '2', '৩' => '3', '৪' => '4',
+            '৫' => '5', '৬' => '6', '৭' => '7', '৮' => '8', '৯' => '9',
+        );
+        
+        // Replace Bangla with English
+        $filename = str_replace(array_keys($bangla_to_english), array_values($bangla_to_english), $filename);
+        
+        // Remove any remaining Bangla characters
+        $filename = preg_replace('/[^\x00-\x7F]+/', '', $filename);
+        
+        // If filename is empty after sanitization, use default
+        if (empty(trim($filename, '_-'))) {
+            $filename = 'question-paper';
+        }
+        
+        return $filename;
     }
 }

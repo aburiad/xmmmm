@@ -1,8 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import { useReactToPrint } from 'react-to-print';
 import { Button } from '../components/ui/button';
-import { ArrowLeft, BookOpen, Settings, Download, Cloud } from 'lucide-react';
+import { ArrowLeft, BookOpen, Settings, Download } from 'lucide-react';
 import { QuestionPaper } from '../types';
 import { loadPapers } from '../utils/storage';
 import { QuestionRenderer } from '../components/QuestionRenderer';
@@ -20,13 +19,14 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '../components/ui/sheet';
-import { generatePDFFromWordPress, downloadPDF } from '../utils/pdfGenerator';
+import { PDFDownloadLink } from '@react-pdf/renderer';
+import { QuestionPaperPDF } from '../components/PDFDocument';
 
 export default function A4Preview() {
   const { paperId } = useParams();
   const navigate = useNavigate();
   const [paper, setPaper] = useState<QuestionPaper | null>(null);
-  const [useBoardStyle, setUseBoardStyle] = useState(true); // Default to board style
+  const [useBoardStyle, setUseBoardStyle] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
 
@@ -70,7 +70,7 @@ export default function A4Preview() {
 
   // Save page settings to localStorage whenever they change
   useEffect(() => {
-    if (paperId && paper) { // Only save after paper is loaded to avoid saving defaults
+    if (paperId && paper) {
       const settings = {
         pageWidth,
         pageHeight,
@@ -92,88 +92,21 @@ export default function A4Preview() {
     return map[type] || type;
   };
 
-  // WordPress PDF Download Handler
-  const handleWordPressPDF = async () => {
-    if (!paper) return;
+  // Memoize PDF document to prevent re-rendering issues
+  const pdfDocument = useMemo(() => {
+    if (!paper) return null;
     
-    // Show loading toast
-    const loadingToast = toast.loading('PDF তৈরি হচ্ছে WordPress থেকে...');
-    
-    try {
-      // Prepare page settings
-      const pageSettings = {
-        columns: 1,
-        columnGap: 20,
-        pageMargin: pageMargin
-      };
-      
-      // Generate PDF from WordPress
-      const result = await generatePDFFromWordPress(paper, pageSettings);
-      
-      if (result.success && result.pdfUrl) {
-        toast.success('PDF সফলভাবে তৈরি হয়েছে!', { id: loadingToast });
-        
-        // Generate filename
-        const filename = `${paper.setup.subject || 'question-paper'}_${paper.setup.class || ''}_${Date.now()}.pdf`;
-        
-        // Download PDF
-        downloadPDF(result.pdfUrl, filename);
-      } else {
-        toast.error(result.error || 'PDF তৈরিতে ব্যর্থ', { id: loadingToast });
-      }
-    } catch (error) {
-      console.error('WordPress PDF Error:', error);
-      toast.error('PDF তৈরিতে সমস্যা হয়েছে', { id: loadingToast });
-    }
-  };
-
-  // PDF Download using Browser's native print-to-PDF functionality
-  // এটি সবচেয়ে নির্ভরযোগ্য কারণ:
-  // ✅ Perfect Bangla font rendering
-  // ✅ Exact A4 sizing with CSS @page
-  // ✅ Multi-page support automatic
-  // ✅ Formula/LaTeX render perfectly
-  // ✅ No library dependency issues
-  const handlePrintToPDF = useReactToPrint({
-    contentRef: previewRef,
-    documentTitle: paper ? `${paper.setup.subject || 'question-paper'}_${paper.setup.class || ''}_${new Date().getTime()}` : 'question-paper',
-    onBeforePrint: () => {
-      toast.info('প্রিন্ট ডায়ালগ খুলছে...');
-      return Promise.resolve();
-    },
-    onAfterPrint: () => {
-      toast.success('প্রিন্ট সম্পন্ন! "Save as PDF" দিয়ে সংরক্ষণ করুন');
-    },
-    pageStyle: `
-      @page {
-        size: ${pageWidth}mm ${pageHeight}mm;
-        margin: 0;
-      }
-      
-      @media print {
-        body {
-          margin: 0;
-          padding: 0;
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
-        }
-        
-        .a4-page {
-          width: ${pageWidth}mm !important;
-          min-height: ${pageHeight}mm !important;
-          padding: ${pageMargin}mm !important;
-          margin: 0 !important;
-          box-shadow: none !important;
-          page-break-after: always;
-        }
-        
-        /* Hide any UI elements */
-        button, .print\\:hidden {
-          display: none !important;
-        }
-      }
-    `,
-  });
+    return (
+      <QuestionPaperPDF 
+        paper={paper} 
+        pageSettings={{ 
+          pageWidth, 
+          pageHeight, 
+          pageMargin 
+        }} 
+      />
+    );
+  }, [paper, pageWidth, pageHeight, pageMargin]);
 
   if (!paper) return null;
 
@@ -197,7 +130,9 @@ export default function A4Preview() {
                 </div>
               </div>
             </div>
+            
             <div className="flex items-center gap-3">
+              {/* Page Settings Sheet */}
               <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
                 <SheetTrigger asChild>
                   <Button variant="outline" size="sm">
@@ -373,22 +308,26 @@ export default function A4Preview() {
                   </ScrollArea>
                 </SheetContent>
               </Sheet>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handlePrintToPDF}
-              >
-                <Download className="w-4 h-4 mr-2" />
-                ডাউনলোড করুন
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleWordPressPDF}
-              >
-                <Cloud className="w-4 h-4 mr-2" />
-                অনলাইন ডাউনলোড করুন
-              </Button>
+
+              {/* NEW: PDF Download Button using @react-pdf/renderer */}
+              {paper && (
+                <PDFDownloadLink
+                  document={pdfDocument}
+                  fileName={`${paper.setup.subject || 'question-paper'}_${paper.setup.class || ''}_${Date.now()}.pdf`}
+                >
+                  {({ blob, url, loading, error }) => (
+                    <Button
+                      variant="default"
+                      size="sm"
+                      disabled={loading}
+                      className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      {loading ? 'PDF তৈরি হচ্ছে...' : 'PDF ডাউনলোড করুন'}
+                    </Button>
+                  )}
+                </PDFDownloadLink>
+              )}
             </div>
           </div>
         </div>
@@ -428,7 +367,9 @@ export default function A4Preview() {
               {/* Meta Info */}
               <div className="flex justify-between mb-6 text-sm pb-4 border-b border-slate-300">
                 <div>
-                  <span className="font-['Noto_Sans_Bengali']">সময়: {paper.setup.timeMinutes} মিনিট</span>
+                  <span className="font-['Noto_Sans_Bengali']">
+                    সময়: {paper.setup.duration || `${paper.setup.timeMinutes} মিনিট`}
+                  </span>
                 </div>
                 <div>
                   <span className="font-['Noto_Sans_Bengali']">পূর্ণমান: {paper.setup.totalMarks}</span>
@@ -443,17 +384,10 @@ export default function A4Preview() {
                 </div>
               )}
 
-              {/* Questions with Column Layout */}
-              <div 
-                className="font-['Noto_Sans_Bengali']"
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: `repeat(${parseInt(paper.setup.layout || '1')}, 1fr)`,
-                  gap: '1.5rem',
-                }}
-              >
+              {/* Questions */}
+              <div className="font-['Noto_Sans_Bengali']">
                 {paper.questions.map((question) => (
-                  <div key={question.id} className="pb-4 border-b border-slate-200 last:border-b-0">
+                  <div key={question.id} className="pb-4 mb-4 border-b border-slate-200 last:border-b-0">
                     <QuestionRenderer question={question} />
                   </div>
                 ))}

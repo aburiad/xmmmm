@@ -31,6 +31,9 @@ export interface Block {
   content: any;
 }
 
+// Type alias for easier imports
+export type ContentBlock = Block;
+
 export interface SubQuestion {
   id: string;
   label: string; // ক, খ, গ, ঘ
@@ -58,6 +61,7 @@ export interface PaperSetup {
   subject: string;
   examType: ExamType;
   timeMinutes: number;
+  duration?: string; // Alternative duration format (e.g., "3 ঘণ্টা")
   totalMarks: number;
   layout: LayoutType;
   schoolName?: string;
