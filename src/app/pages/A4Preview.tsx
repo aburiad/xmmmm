@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { Button } from '../components/ui/button';
-import { ArrowLeft, BookOpen, Settings, Download } from 'lucide-react';
+import { ArrowLeft, BookOpen, Settings } from 'lucide-react';
 import { QuestionPaper } from '../types';
 import { loadPapers } from '../utils/storage';
 import { QuestionRenderer } from '../components/QuestionRenderer';
@@ -19,8 +19,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '../components/ui/sheet';
-import { PDFDownloadLink } from '@react-pdf/renderer';
-import { QuestionPaperPDF } from '../components/PDFDocument';
+import { PDFDownloadButton } from '../components/PDFDownloadButton';
 
 export default function A4Preview() {
   const { paperId } = useParams();
@@ -91,22 +90,6 @@ export default function A4Preview() {
     };
     return map[type] || type;
   };
-
-  // Memoize PDF document to prevent re-rendering issues
-  const pdfDocument = useMemo(() => {
-    if (!paper) return null;
-    
-    return (
-      <QuestionPaperPDF 
-        paper={paper} 
-        pageSettings={{ 
-          pageWidth, 
-          pageHeight, 
-          pageMargin 
-        }} 
-      />
-    );
-  }, [paper, pageWidth, pageHeight, pageMargin]);
 
   if (!paper) return null;
 
@@ -309,24 +292,17 @@ export default function A4Preview() {
                 </SheetContent>
               </Sheet>
 
-              {/* NEW: PDF Download Button using @react-pdf/renderer */}
+              {/* PDF Download Button using html2canvas + jspdf */}
               {paper && (
-                <PDFDownloadLink
-                  document={pdfDocument}
-                  fileName={`${paper.setup.subject || 'question-paper'}_${paper.setup.class || ''}_${Date.now()}.pdf`}
-                >
-                  {({ blob, url, loading, error }) => (
-                    <Button
-                      variant="default"
-                      size="sm"
-                      disabled={loading}
-                      className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      {loading ? 'PDF তৈরি হচ্ছে...' : 'PDF ডাউনলোড করুন'}
-                    </Button>
-                  )}
-                </PDFDownloadLink>
+                <PDFDownloadButton
+                  paper={paper}
+                  pageSettings={{
+                    pageWidth,
+                    pageHeight,
+                    pageMargin
+                  }}
+                  previewRef={previewRef}
+                />
               )}
             </div>
           </div>
